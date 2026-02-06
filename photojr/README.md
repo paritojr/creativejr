@@ -1,0 +1,27 @@
+<div align="center">
+<h1>photojr</h1>
+📷 a photo editing tool
+</div>
+
+## about
+photojr is a photo editing tool, in which you can do a lot of things, like:
+- import images and export your final result
+- make shapes
+- create and use your own palettes
+- make text and customize it!
+- draw with the brush
+
+and so much more!
+
+## faq
+
+### Q: to what formats can i export?
+A: well, as of now, you can only export to PNG, on the good side, you at least get transparency
+
+### Q: can i layer images?
+yes, each image you import is stacked in the order you add them
+
+<br>
+<br>
+<br>
+well, it's pretty good tbh, so yeah!
