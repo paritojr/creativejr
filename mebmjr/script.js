@@ -1526,7 +1526,7 @@ window.addEventListener('load', function() {
       to start, drag in or paste URLs to videos and images.
       <br>
       a demo can be found <a href="https://bwasti.github.io/mebm/#https%3A%2F%2Fjott.live%2Fraw%2Ftutorial.json" target="_blank">here</a>
-      and usage information <a href="https://github.com/paritojr/mebmjr/wiki" target="_blank">here</a>.
+      and usage information <a href="https://github.com/paritojr/creativejr/wiki/mebmjr-%E2%80%90-Overview" target="_blank">here</a>.
       <br>
       <br>
       you can also change the export format, fps and max ram <br> by clicking the 3 dots and going to the settings.
