@@ -194,3 +194,26 @@ a:visited {
   padding: 10px;
   cursor: pointer;
 }
+
+#sidebar div::after {
+  left: 100%;
+  content: attr(data-tooltip);
+  position: absolute;
+  background: #222;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 30;
+}
+
+#sidebar div:hover::after {
+  opacity: 1;
+}
+
+#sidebar div:last-child:hover::after {
+  opacity: 0;
+}
