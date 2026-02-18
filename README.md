@@ -9,8 +9,8 @@
 </div>
 
 ## about
-creativejr is a browser based creative tool suite that can help you in photo/video editing<br>
-we include tools like photojr or mebmjr, which are easy to learn and very fun!<br>
+creativejr is a browser based creative tool suite made with vanilla js and zero dependencies<br>
+we include photojr and mebmjr, easy to use and surprisingly powerful.<br>
 
 ## features
 - **simple to use**: every tool is designed to be as simple and easy to use
