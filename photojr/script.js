@@ -32,6 +32,7 @@ class CommonLayer {
     this.x = 0;
     this.y = 0;
     this.title_div = null;
+    this.blendMode = "normal";
   }
   setupSB(div) {
     this.preview = div;
@@ -117,6 +118,22 @@ class TextLayer extends CommonLayer {
       (e) => this.weight = e.target.value
     );
 
+    settings.add('blendmode', null,
+      select => {
+        const options = ["normal", "multiply", "screen", "overlay", "darken", "lighten", 
+                         "soft-light", "hard-light", "difference", "exclusion"];
+        options.forEach(value => {
+          const opt = document.createElement('option');
+          opt.value = value;
+          opt.textContent = value;
+          select.appendChild(opt);
+        });
+        select.value = this.blendMode;
+      },
+      e => this.blendMode = e.target.value,
+      'select'
+    );
+
     let settings_link = document.createElement('a');
     settings_link.style.float = "right";
     settings_link.textContent = "[...]";
@@ -127,6 +144,7 @@ class TextLayer extends CommonLayer {
   }
   render(canvas_out) {
     canvas_out.save();
+    canvas_out.globalCompositeOperation = this.blendMode;
     canvas_out.fillStyle = this.color;
     canvas_out.translate(this.x, this.y);
     canvas_out.font = this.weight + " " + this.size + "px " + this.font;
@@ -158,8 +176,36 @@ class ImageLayer extends CommonLayer {
       this.height *= scale;
     };
   }
+  setupSB(div) {
+    super.setupSB(div);
+    var settings = new Settings();
+    settings.add('blendmode', null,
+      select => {
+        const options = ["normal", "multiply", "screen", "overlay", "darken", "lighten",
+                         "soft-light", "hard-light", "difference", "exclusion"];
+        options.forEach(value => {
+          const opt = document.createElement('option');
+          opt.value = value;
+          opt.textContent = value;
+          select.appendChild(opt);
+        });
+        select.value = this.blendMode;
+      },
+      e => this.blendMode = e.target.value,
+      'select'
+    );
+
+    let settings_link = document.createElement('a');
+    settings_link.style.float = "right";
+    settings_link.textContent = "[...]";
+    settings_link.addEventListener('click', function() {
+      popup(settings.div);
+    });
+    this.title_div.appendChild(settings_link);
+  }
   render(canvas_out) {
     canvas_out.save();
+    canvas_out.globalCompositeOperation = this.blendMode;
     canvas_out.rotate((this.rotation * Math.PI) / 180);
     canvas_out.drawImage(this.image, this.x, this.y, this.width * this.scale, this.height * this.scale);
     canvas_out.restore();
@@ -191,6 +237,22 @@ class ShapeLayer extends CommonLayer {
       i => i.value = this.width,
       e => this.height = e.target.value
     );
+
+    settings.add('blendmode', null,
+      select => {
+        const options = ["normal", "multiply", "screen", "overlay", "darken", "lighten", 
+                         "soft-light", "hard-light", "difference", "exclusion"];
+        options.forEach(value => {
+          const opt = document.createElement('option');
+          opt.value = value;
+          opt.textContent = value;
+          select.appendChild(opt);
+        });
+        select.value = this.blendMode;
+      },
+      e => this.blendMode = e.target.value,
+      'select'
+    );
     
     let settings_link = document.createElement('a');
     settings_link.style.float = "right";
@@ -202,6 +264,7 @@ class ShapeLayer extends CommonLayer {
   }
   render(canvas_out) {
     canvas_out.save();
+    canvas_out.globalCompositeOperation = this.blendMode;
     canvas_out.translate(this.x, this.y);
     canvas_out.rotate((this.rotation * Math.PI) / 180);
     canvas_out.fillStyle = this.color;
@@ -542,16 +605,6 @@ class Project {
 
   nShape(type) {
     this.add(new ShapeLayer(type));
-    if (!this.canvas) {
-      this.canvas = document.createElement("canvas");
-      this.canvas.width = 400;
-      this.canvas.height = 200;
-      this.container.appendChild(this.canvas);
-      this.ctx = this.canvas.getContext("2d");
-      this.setupDragHandler();
-      this.setupPinchHandler();
-      this.startLoop();
-    }
   }
   
   enterEyeDropper() {
@@ -685,7 +738,7 @@ function updateSettings() {
   project.changeSettings();
 }
 function newShape() {
-  let shapeType = prompt("enter shape type bruh (can be square or ellipse):");
+  let shapeType = prompt("enter shape type (can be square or ellipse):");
   let final = shapeType.toLowerCase();
   if (shapeType !== "square" && shapeType !== "ellipse") {
     alert("shape type invalid, my bad");
