@@ -5,11 +5,12 @@
 
 ## about
 photojr is a photo editing tool, in which you can do a lot of things, like:
-- import images and export your final result
-- make shapes
+- import images and modify them
+- make shapes and stuff
 - create and use your own palettes
-- make text and customize it!
+- make text and customize it
 - draw with the brush
+- use blend modes to your creativity
 
 and so much more!
 
