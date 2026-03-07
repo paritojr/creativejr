@@ -118,7 +118,7 @@ class TextLayer extends CommonLayer {
       (e) => this.weight = e.target.value
     );
 
-    settings.add('blendmode', null,
+    settings.add('blend mode', null,
       select => {
         const options = ["normal", "multiply", "screen", "overlay", "darken", "lighten", 
                          "soft-light", "hard-light", "difference", "exclusion"];
@@ -179,7 +179,7 @@ class ImageLayer extends CommonLayer {
   setupSB(div) {
     super.setupSB(div);
     var settings = new Settings();
-    settings.add('blendmode', null,
+    settings.add('blend mode', null,
       select => {
         const options = ["normal", "multiply", "screen", "overlay", "darken", "lighten",
                          "soft-light", "hard-light", "difference", "exclusion"];
@@ -238,7 +238,7 @@ class ShapeLayer extends CommonLayer {
       e => this.height = e.target.value
     );
 
-    settings.add('blendmode', null,
+    settings.add('blend mode', null,
       select => {
         const options = ["normal", "multiply", "screen", "overlay", "darken", "lighten", 
                          "soft-light", "hard-light", "difference", "exclusion"];
@@ -689,6 +689,23 @@ class Project {
     }
   }
 }
+
+window.addEventListener('drop', function(ev) {
+  ev.preventDefault();
+  if (ev.dataTransfer.items) {
+    for (var i = 0; i < ev.dataTransfer.items.length; i++) {
+      let item = ev.dataTransfer.items[i];
+      if (item.kind === 'file') {
+        const file = item.getAsFile();
+        project.addImage(file);
+      }
+    }
+  }
+});
+
+window.addEventListener('dragover', function(e) {
+  e.preventDefault();
+});
 
 function popup(text) {
   const div = document.createElement('div');
