@@ -453,11 +453,16 @@ class Project {
   
   screenToLayer(mouseX, mouseY, layer) {
     const rect = this.canvas.getBoundingClientRect();
-    const canvasX = mouseX - rect.left;
-    const canvasY = mouseY - rect.top;
-    const lx = layer.x !== undefined ? layer.x : 0;
-    const ly = layer.y !== undefined ? layer.y : 0;
-    
+
+    const scaleX = rect.width / this.canvas.width;
+    const scaleY = rect.height / this.canvas.height;
+
+    const canvasX = (mouseX - rect.left) / scaleX;
+    const canvasY = (mouseY - rect.top) / scaleY;
+
+    const lx = layer.x || 0;
+    const ly = layer.y || 0;
+
     return {
       x: canvasX - lx,
       y: canvasY - ly
@@ -465,40 +470,60 @@ class Project {
   }
   
   setupDragHandler() {
+    const getMousePos = (e) => {
+      const rect = this.canvas.getBoundingClientRect();
+      
+      const scaleX = rect.width / this.canvas.width;
+      const scaleY = rect.height / this.canvas.height;
+      
+      return {
+        x: (e.clientX - rect.left) / scaleX,
+        y: (e.clientY - rect.top) / scaleY
+      };
+    };
+    
     this.container.addEventListener('mousedown', (e) => {
-      if (e.button === 0) {
-        this.isDragging = true;
-        this.lastX = e.clientX;
-        this.lastY = e.clientY;
-        if (this.selected_layer instanceof BrushLayer) {
-          const p = this.screenToLayer(e.clientX, e.clientY, this.selected_layer);
-          const ctx = this.selected_layer.ctx;
-          ctx.beginPath();
-          ctx.moveTo(p.x, p.y);
-        }
+      if (e.button !== 0) return;
+      const mouse = getMousePos(e);
+      this.isDragging = true;
+      this.lastX = mouse.x;
+      this.lastY = mouse.y;
+      
+      if (this.selected_layer instanceof BrushLayer) {
+        const p = this.screenToLayer(e.clientX, e.clientY, this.selected_layer);
+        const ctx = this.selected_layer.ctx;
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y);
       }
     });
+    
     this.container.addEventListener('mousemove', (e) => {
-      if (this.isDragging && this.layers) {
-        const dx = e.clientX - this.lastX;
-        const dy = e.clientY - this.lastY;
-        this.lastX = e.clientX;
-        this.lastY = e.clientY;
-        if (this.selected_layer instanceof BrushLayer) {
-          const p = this.screenToLayer(e.clientX, e.clientY, this.selected_layer);
-          const ctx = this.selected_layer.ctx;
-          ctx.lineTo(p.x, p.y);
-          ctx.stroke();
-        } else {
-          this.offsetX += dx;
-          this.offsetY += dy;
-          this.move(dx, dy);
-        }
+      if (!this.isDragging || !this.layers) return;
+
+      const mouse = getMousePos(e);
+      
+      const dx = mouse.x - this.lastX;
+      const dy = mouse.y - this.lastY;
+
+      this.lastX = mouse.x;
+      this.lastY = mouse.y;
+
+      if (this.selected_layer instanceof BrushLayer) {
+        const p = this.screenToLayer(e.clientX, e.clientY, this.selected_layer);
+        const ctx = this.selected_layer.ctx;
+        ctx.lineTo(p.x, p.y);
+        ctx.stroke();
+      } else {
+        this.offsetX += dx;
+        this.offsetY += dy;
+        this.move(dx, dy);
       }
     });
+    
     this.container.addEventListener('mouseup', () => {
       this.isDragging = false;
     });
+    
     this.container.addEventListener('mouseleave', () => {
       this.isDragging = false;
     });
