@@ -73,13 +73,11 @@ class TextLayer extends CommonLayer {
     this.x = 30;
     this.y = 30;
   }
-  setupSB(div) {
-    super.setupSB(div);
+  setupSettings() {
     var settings = new Settings();
-    settings.add('text', null,
+    settings.add('text', 'text',
       i => i.value = this.text,
-      e => this.text = e.target.value,
-      'textarea'
+      e => this.text = e.target.value
     );
 
     settings.add('color', 'color',
@@ -118,10 +116,9 @@ class TextLayer extends CommonLayer {
       (e) => this.weight = e.target.value
     );
 
-    settings.add('blend mode', null,
+    settings.add('blendmode', null,
       select => {
-        const options = ["normal", "multiply", "screen", "overlay", "darken", "lighten", 
-                         "soft-light", "hard-light", "difference", "exclusion"];
+        const options = ["normal", "multiply", "screen", "overlay", "darken", "lighten", "soft-light", "hard-light", "difference", "exclusion"];
         options.forEach(value => {
           const opt = document.createElement('option');
           opt.value = value;
@@ -134,13 +131,11 @@ class TextLayer extends CommonLayer {
       'select'
     );
 
-    let settings_link = document.createElement('a');
-    settings_link.style.float = "right";
-    settings_link.textContent = "[...]";
-    settings_link.addEventListener('click', function() {
-      popup(settings.div);
-    });
-    this.title_div.appendChild(settings_link);
+    document.querySelector(".settings_header").replaceChildren(...settings.holder.children);
+  }
+  setupSB(div) {
+    super.setupSB(div);
+    this.setupSettings();
   }
   render(canvas_out) {
     canvas_out.save();
@@ -167,22 +162,12 @@ class ImageLayer extends CommonLayer {
     } else if (file instanceof File) {
       this.image.src = URL.createObjectURL(file);
     }
-    this.image.onload = () => {
-      this.width = this.image.naturalWidth;
-      this.height = this.image.naturalHeight;
-      const MAX = 512;
-      const scale = Math.min(1, MAX / Math.max(this.width, this.height));
-      this.width *= scale;
-      this.height *= scale;
-    };
   }
-  setupSB(div) {
-    super.setupSB(div);
+  setupSettings() {
     var settings = new Settings();
-    settings.add('blend mode', null,
+    settings.add('blendmode', null,
       select => {
-        const options = ["normal", "multiply", "screen", "overlay", "darken", "lighten",
-                         "soft-light", "hard-light", "difference", "exclusion"];
+        const options = ["normal", "multiply", "screen", "overlay", "darken", "lighten", "soft-light", "hard-light", "difference", "exclusion"];
         options.forEach(value => {
           const opt = document.createElement('option');
           opt.value = value;
@@ -195,13 +180,11 @@ class ImageLayer extends CommonLayer {
       'select'
     );
 
-    let settings_link = document.createElement('a');
-    settings_link.style.float = "right";
-    settings_link.textContent = "[...]";
-    settings_link.addEventListener('click', function() {
-      popup(settings.div);
-    });
-    this.title_div.appendChild(settings_link);
+    document.querySelector(".settings_header").replaceChildren(...settings.holder.children);
+  }
+  setupSB(div) {
+    super.setupSB(div);
+    this.setupSettings();
   }
   render(canvas_out) {
     canvas_out.save();
@@ -220,8 +203,7 @@ class ShapeLayer extends CommonLayer {
     this.name = `${type} Layer`;
     this.color = "#000";
   }
-  setupSB(div) {
-    super.setupSB(div);
+  setupSettings() {
     var settings = new Settings();
     settings.add('color', 'color',
       i => i.value = this.color,
@@ -238,10 +220,9 @@ class ShapeLayer extends CommonLayer {
       e => this.height = e.target.value
     );
 
-    settings.add('blend mode', null,
+    settings.add('blendmode', null,
       select => {
-        const options = ["normal", "multiply", "screen", "overlay", "darken", "lighten", 
-                         "soft-light", "hard-light", "difference", "exclusion"];
+        const options = ["normal", "multiply", "screen", "overlay", "darken", "lighten", "soft-light", "hard-light", "difference", "exclusion"];
         options.forEach(value => {
           const opt = document.createElement('option');
           opt.value = value;
@@ -253,14 +234,12 @@ class ShapeLayer extends CommonLayer {
       e => this.blendMode = e.target.value,
       'select'
     );
-    
-    let settings_link = document.createElement('a');
-    settings_link.style.float = "right";
-    settings_link.textContent = "[...]";
-    settings_link.addEventListener('click', function() {
-      popup(settings.div);
-    });
-    this.title_div.appendChild(settings_link);
+
+    document.querySelector(".settings_header").replaceChildren(...settings.holder.children);
+  }
+  setupSB(div) {
+    super.setupSB(div);
+    this.setupSettings();
   }
   render(canvas_out) {
     canvas_out.save();
@@ -298,8 +277,7 @@ class BrushLayer extends CommonLayer {
     this.ctx.strokeStyle = this.color;
     this.ctx.lineWidth = this.lineWidth;
   }
-  setupSB(div) {
-    super.setupSB(div);
+  setupSettings() {
     var settings = new Settings();
     settings.add('color', 'color',
       i => i.value = this.color,
@@ -322,13 +300,11 @@ class BrushLayer extends CommonLayer {
       }
     );
 
-    let settings_link = document.createElement('a');
-    settings_link.style.float = "right";
-    settings_link.textContent = "[...]";
-    settings_link.addEventListener('click', function() {
-      popup(settings.div);
-    });
-    this.title_div.appendChild(settings_link);
+    document.querySelector(".settings_header").replaceChildren(...settings.holder.children);
+  }
+  setupSB(div) {
+    super.setupSB(div);
+    this.setupSettings();
   }
   render(ctx) {
     ctx.save();
@@ -336,7 +312,6 @@ class BrushLayer extends CommonLayer {
     ctx.restore();
   }
 }
-
 
 class Project {
   constructor() {
@@ -370,6 +345,7 @@ class Project {
     preview.classList.toggle('preview');
     preview.addEventListener('click', (function() {
       this.select(layer);
+      this.selected_layer.setupSettings();
     }).bind(this));
     title.classList.toggle('preview_title');
     preview.appendChild(title);
@@ -382,10 +358,8 @@ class Project {
       layer.image.onload = () => {
         if (!this.canvas) {
           this.canvas = document.createElement("canvas");
-          const MAX = 512;
-          let scale = Math.min(1, MAX / Math.max(layer.image.naturalWidth, layer.image.naturalHeight));
-          this.canvas.width = layer.image.naturalWidth * scale;
-          this.canvas.height = layer.image.naturalHeight * scale;
+          this.canvas.width = layer.image.naturalWidth;
+          this.canvas.height = layer.image.naturalHeight;
           this.container.appendChild(this.canvas);
           this.ctx = this.canvas.getContext("2d");
           this.setupDragHandler();
