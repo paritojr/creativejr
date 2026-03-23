@@ -17,8 +17,8 @@ and more coming soon!
 ### Q: to what formats can i export?
 A: it mostly depends on your browser, but mostly MP4 and WebM, although some browsers support MKV, but well, it's up to the browser tbh
 
-### Q: can i preview my final result?
-A: yes! it shows you the final video in a popup so you can review it and see if it's good or not :)
+### Q: can i use it on mobile?
+A: yes! you can! mebmjr does have a mobile ui, so you can easily use it on your mobile anywhere you want :)
 
 <br>
 <br>

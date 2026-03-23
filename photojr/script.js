@@ -324,6 +324,9 @@ class Project {
     this.scale = 1;
     this.selected_layer = null;
     this.selected_color = null;
+    this.grabTool = false;
+    this.panX = 0;
+    this.panY = 0;
   }
 
   select(layer) {
@@ -463,7 +466,9 @@ class Project {
       this.lastX = mouse.x;
       this.lastY = mouse.y;
       
-      if (this.selected_layer instanceof BrushLayer) {
+      if (this.grabTool) {
+        this.container.style.cursor = 'grabbing';
+      } else if (this.selected_layer instanceof BrushLayer) {
         const p = this.screenToLayer(e.clientX, e.clientY, this.selected_layer);
         const ctx = this.selected_layer.ctx;
         ctx.beginPath();
@@ -482,7 +487,13 @@ class Project {
       this.lastX = mouse.x;
       this.lastY = mouse.y;
 
-      if (this.selected_layer instanceof BrushLayer) {
+      if (this.grabTool) {
+        const style = window.getComputedStyle(this.canvas);
+        const matrix = new DOMMatrix(style.transform);
+        this.panX = matrix.m41 + dx;
+        this.panY = matrix.m42 + dy;
+        this.canvas.style.transform = `translate(${this.panX}px, ${this.panY}px) scale(${this.scale})`;
+      } else if (this.selected_layer instanceof BrushLayer) {
         const p = this.screenToLayer(e.clientX, e.clientY, this.selected_layer);
         const ctx = this.selected_layer.ctx;
         ctx.lineTo(p.x, p.y);
@@ -496,10 +507,12 @@ class Project {
     
     this.container.addEventListener('mouseup', () => {
       this.isDragging = false;
+      this.container.style.cursor = 'default';
     });
     
     this.container.addEventListener('mouseleave', () => {
       this.isDragging = false;
+      this.container.style.cursor = 'default';
     });
   }
   
@@ -516,7 +529,7 @@ class Project {
         const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
         this.scale *= zoomFactor;
         this.scale = Math.max(0.1, Math.min(this.scale, 3));
-        this.canvas.style.transform = `scale(${this.scale})`;
+        this.canvas.style.transform = `translate(${this.panX}px, ${this.panY}px) scale(${this.scale})`;
       }
     };
     // safari
@@ -536,7 +549,7 @@ class Project {
 
       this.rotate(rotation);
       this.scale *= scale;
-      this.canvas.style.transform = `scale(${this.scale})`;
+      this.canvas.style.transform = `translate(${this.panX}px, ${this.panY}px) scale(${this.scale})`;
     };
     let gestureend = function(e) {
       this.gesturing = false;
@@ -687,6 +700,10 @@ class Project {
       this.add(new BrushLayer(this.canvas.width, this.canvas.height));
     }
   }
+
+  enterGrabTool() {
+    this.grabTool = !this.grabTool;
+  }
 }
 
 window.addEventListener('drop', function(ev) {
@@ -727,8 +744,13 @@ let project = new Project();
 window.addEventListener('keydown', function(ev) {
   if (ev.code == "KeyI") {
     project.enterEyeDropper();
+  } else if (ev.code == "KeyG") {
+    project.enterGrabTool();
   }
 });
+function grabtool() {
+  project.enterGrabTool();
+}
 function eyedropper() {
   project.enterEyeDropper();
 }
