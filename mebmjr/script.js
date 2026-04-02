@@ -26,6 +26,7 @@ const ext_map = {
   'oga': 'audio/ogg',
   'wav': 'audio/wav',
   'weba': 'audio/webm',
+  'mjrp': ''
   };
 
 if(/Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)){
@@ -87,44 +88,17 @@ function updateSettings() {
   popup(settings.div);
 }
 
-function exportToJson() {
-  var xhr = new XMLHttpRequest();
-  const date = new Date().getTime();
-  const str = date + "_" + Math.floor(Math.random() * 1000) + ".json";
-  const url = "https://jott.live/save/note/"+ str + "/mebm";
-  xhr.open("POST", url, true);
-  xhr.setRequestHeader('Content-Type', 'application/json');
-  xhr.send(JSON.stringify({
-    note: player.dumpToJson()
-  }));
-  let uri = encodeURIComponent("https://jott.live/raw/" + str);
-  let mebm_url = window.location + "#" + uri;
-  const text = document.createElement('div');
-  const preamble = document.createElement('span');
-  preamble.textContent = "copy the link below to share:";
-  const a = document.createElement('a');
-  a.href = mebm_url;
-  a.setAttribute("target", "_blank");
-  a.textContent = "[link]";
-
-  const json = document.createElement('pre');
-  json.textContent = player.dumpToJson();
-  json.style.overflow = 'scroll';
-  json.style.wordBreak = 'break-all';
-  json.style.height = '50%';
-  text.appendChild(preamble);
-  text.appendChild(document.createElement('br'));
-  text.appendChild(document.createElement('br'));
-  text.appendChild(a);
-  text.appendChild(document.createElement('br'));
-  text.appendChild(document.createElement('br'));
-  const preamble2 = document.createElement('span');
-  preamble2.textContent = "or save and host the JSON below";
-  text.appendChild(preamble2);
-  text.appendChild(document.createElement('br'));
-  text.appendChild(document.createElement('br'));
-  text.appendChild(json);
-  popup(text);
+async function exportToMJRP() {
+  let file = await player.dumpProject();
+  let blob = new Blob([file], {
+    type: "application/octet-stream"
+  });
+  let url = URL.createObjectURL(blob);
+  let a = document.createElement("a");
+  a.href = url;
+  a.download = "project.mjrp";
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 
@@ -682,6 +656,7 @@ class AudioLayer extends RenderedLayer {
   constructor(file) {
     super(file);
     this.reader = new FileReader();
+    this.file = file;
     this.audio_ctx = new AudioContext();
     this.audio_buffer = null;
     this.source = null;
@@ -806,49 +781,100 @@ class Player {
     this.resize();
   }
 
-  dumpToJson() {
-    let out = [];
-    for (let layer of this.layers) {
-      out.push(layer.dump());
-    }
-    return JSON.stringify(out);
-  }
+  async dumpProject() {
+    let jsonLayers = [];
+    let assets = [];
+    let binaryOffset = 0;
 
-  async loadLayers(layers) {
-    let on_ready = function(d, c) {
-      if (!d.ready) {
-        setTimeout(function(){ on_ready(d, c); }, 10);
-      } else {
-        c(d);
-      }
-    };
-    for (let layer_d of layers) {
-      let layer = null;
-      if (layer_d.type == "VideoLayer") {
-        layer = await this.addURI(layer_d.uri);
-      } else if (layer_d.type == "TextLayer") {
-        layer = this.add(new TextLayer(layer_d.name));
-      } else if (layer_d.type == "ImageLayer") {
-        layer = await this.addURI(layer_d.uri);
-      }
-      if (!layer) {
-        alert("layer couldn't be processed");
-        continue;
-      }
-      on_ready(layer, function(l) {
-        layer.name = layer.name;
-        layer.width = layer_d.width,
-        layer.height = layer_d.height,
-        layer.start_time = layer_d.start_time;
-        layer.total_time = layer_d.total_time;
-        if (layer_d.frames) {
-          layer.frames = [];
-          for (let f of layer_d.frames) {
-            layer.frames.push(new Float32Array(f));
+    for (let layer of this.layers) {
+      let obj = layer.dump();
+
+      let assetData = null;
+      let assetId = null;
+
+      if (layer.constructor.name === "TextLayer") {
+        assetId = null;
+      } else if (layer.constructor.name === "ImageLayer") {
+        if (layer.img && layer.img.src) {
+          if (!layer.img.complete) {
+            await new Promise((resolve) => {
+              layer.img.onload = resolve;
+            });
           }
+          assetId = `img_${assets.length}`;
+          let blob = await fetch(layer.img.src).then(r => r.blob());
+          assets.push({
+            id: assetId,
+            offset: binaryOffset,
+            size: blob.size,
+            data: await blob.arrayBuffer()
+          });
+          binaryOffset += blob.size;
         }
-      });
+
+      } else if (layer.constructor.name === "AudioLayer") {
+        if (layer.file) {
+          assetId = `aud_${assets.length}`;
+          let arrayBuffer = await layer.file.arrayBuffer();
+          assets.push({
+            id: assetId,
+            offset: binaryOffset,
+            size: arrayBuffer.byteLength,
+            data: arrayBuffer
+          });
+          binaryOffset += arrayBuffer.byteLength;
+        }
+      } else if (layer.constructor.name === "VideoLayer") {
+        if (layer.src) {
+          assetId = `vid_${assets.length}`;
+          let arrayBuffer = await fetch(layer.src).then(r => r.arrayBuffer());
+          assets.push({
+            id: assetId,
+            offset: binaryOffset,
+            size: arrayBuffer.byteLength,
+            data: arrayBuffer
+          });
+          binaryOffset += arrayBuffer.byteLength;
+        }
+      }
+
+      obj.asset_id = assetId;
+      jsonLayers.push(obj);
     }
+
+    let projectJson = {
+      settings: {fps: fps},
+      layers: jsonLayers,
+      assets: assets.map(a => ({
+        id: a.id,
+        offset: a.offset,
+        size: a.size
+      }))
+    };
+
+    let jsonString = JSON.stringify(projectJson);
+    let encoder = new TextEncoder();
+    let jsonBytes = encoder.encode(jsonString);
+
+    let header = new Uint8Array(9);
+    header.set([0x53, 0x48, 0x49, 0x54]);
+    header[4] = 1;
+    let view = new DataView(header.buffer);
+    view.setUint32(5, jsonBytes.length, true);
+    let totalSize = 9 + jsonBytes.length + assets.reduce((sum, a) => sum + a.size, 0);
+    let output = new Uint8Array(totalSize);
+    let offset = 0;
+    output.set(header, offset);
+    offset += header.length;
+    output.set(jsonBytes, offset);
+    offset += jsonBytes.length;
+
+    for (let asset of assets) {
+      output.set(new Uint8Array(asset.data), offset);
+      offset += asset.size;
+    }
+
+    return output;
   }
 
   intersectsTime(time, query) {
@@ -1380,6 +1406,89 @@ class Player {
     window.requestAnimationFrame(this.loop.bind(this));
   }
 
+  async addProj(file) {
+    const reader = new FileReader();
+
+    reader.onload = async (e) => {
+      try {
+        let arrayBuffer = e.target.result;
+        const view = new DataView(arrayBuffer);
+
+        const magic = String.fromCharCode(view.getUint8(0), view.getUint8(1), view.getUint8(2), view.getUint8(3));
+        const jsonSize = view.getUint32(5, true);
+
+        const jsonData = new TextDecoder().decode(arrayBuffer.slice(9, 9 + jsonSize));
+        const projectJson = JSON.parse(jsonData);
+        const jsonSectionEnd = 9 + jsonSize;
+
+        for (let layer_d of projectJson.layers) {
+          let layer = null;
+          let assetData = null;
+
+          if (layer_d.asset_id) {
+            const asset = projectJson.assets.find(a => a.id === layer_d.asset_id);
+            if (!asset) {
+              console.warn("no asset for this layer:", layer_d.name);
+              continue;
+            }
+
+            assetData = arrayBuffer.slice(jsonSectionEnd + asset.offset, jsonSectionEnd + asset.offset + asset.size);
+            let blobType = "application/octet-stream";
+            if (layer_d.type === "ImageLayer") blobType = "image/png";
+            if (layer_d.type === "AudioLayer") blobType = "audio/mp3";
+            if (layer_d.type === "VideoLayer") blobType = "video/mp4";
+
+            let blob = new Blob([assetData], {
+              type: blobType
+            });
+
+            if (layer_d.type === "ImageLayer") {
+              layer = new ImageLayer(blob);
+              layer.name = layer_d.name;
+              this.add(layer);
+            }
+            if (layer_d.type === "AudioLayer") {
+              layer = new AudioLayer(blob);
+              layer.name = layer_d.name;
+              this.add(layer);
+            }
+            if (layer_d.type === "VideoLayer") {
+              layer = new VideoLayer(blob);
+              layer.name = layer_d.name;
+              this.add(layer);
+            }
+          } else {
+            if (layer_d.type === "TextLayer") {
+              layer = new TextLayer(layer_d.name);
+              this.add(layer);
+            }
+          }
+
+          layer.width = layer_d.width || null;
+          layer.height = layer_d.height || null;
+          layer.start_time = layer_d.start_time || 0;
+          layer.total_time = layer_d.total_time || 0;
+
+          if (layer_d.frames) {
+            layer.frames = [];
+            for (let f of layer_d.frames) {
+              layer.frames.push(new Float32Array(f));
+            }
+          }
+        }
+
+      } catch (err) {
+        console.error("error:", err);
+      }
+    };
+
+    reader.onerror = (err) => {
+      console.error("error:", err);
+    };
+
+    reader.readAsArrayBuffer(file);
+  }
+
   addFile(file) {
     if (file.type.indexOf('video') >= 0) {
       this.add(new AudioLayer(file));
@@ -1388,6 +1497,8 @@ class Player {
       return this.add(new ImageLayer(file));
     } else if (file.type.indexOf('audio') >= 0) {
       return this.add(new AudioLayer(file));
+    } else if (file.type === "") {
+      return this.addProj(file)
     }
   }
 
@@ -1399,11 +1510,6 @@ class Player {
     let extension = uri.split(/[#?]/)[0].split('.').pop().trim();
 
     if (!ext_map[extension]) {
-      if (extension == 'json') {
-        let response = await fetch(uri);
-        let layers = await response.json();
-        player.loadLayers(layers);
-      }
       return;
     }
     let metadata = {
@@ -1472,7 +1578,7 @@ window.addEventListener('keydown', function(ev) {
     }
   } else if (ev.code == "KeyJ") {
     if (ev.ctrlKey) {
-     exportToJson();
+     exportToMJRP();
     }
   }
 });
@@ -1648,7 +1754,7 @@ function getSupportedMimeTypes() {
 
 function download(ev) {
   if (ev.shiftKey) {
-    exportToJson();
+    exportToMJRP();
     return;
   }
   if (player.layers.length == 0) {
