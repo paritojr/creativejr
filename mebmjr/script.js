@@ -1408,7 +1408,6 @@ class Player {
 
   async addProj(file) {
     const reader = new FileReader();
-
     reader.onload = async (e) => {
       try {
         let arrayBuffer = e.target.result;
@@ -1420,7 +1419,7 @@ class Player {
         const jsonData = new TextDecoder().decode(arrayBuffer.slice(9, 9 + jsonSize));
         const projectJson = JSON.parse(jsonData);
         const jsonSectionEnd = 9 + jsonSize;
-
+        fps = projectJson.settings.fps;
         for (let layer_d of projectJson.layers) {
           let layer = null;
           let assetData = null;

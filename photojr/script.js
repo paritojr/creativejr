@@ -507,12 +507,12 @@ class Project {
     
     this.container.addEventListener('mouseup', () => {
       this.isDragging = false;
-      this.container.style.cursor = 'default';
+      this.container.style.cursor = this.grabTool ? 'grab' : '';
     });
     
     this.container.addEventListener('mouseleave', () => {
       this.isDragging = false;
-      this.container.style.cursor = 'default';
+      this.container.style.cursor = this.grabTool ? 'grab' : '';
     });
   }
   
@@ -703,6 +703,7 @@ class Project {
 
   enterGrabTool() {
     this.grabTool = !this.grabTool;
+    this.container.style.cursor = this.grabTool ? 'grab' : '';
   }
 }
 
