@@ -825,9 +825,9 @@ class Player {
           binaryOffset += arrayBuffer.byteLength;
         }
       } else if (layer.constructor.name === "VideoLayer") {
-        if (layer.src) {
+        if (layer.video.src) {
           assetId = `vid_${assets.length}`;
-          let arrayBuffer = await fetch(layer.src).then(r => r.arrayBuffer());
+          let arrayBuffer = await fetch(layer.video.src).then(r => r.arrayBuffer());
           assets.push({
             id: assetId,
             offset: binaryOffset,
