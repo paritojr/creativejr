@@ -183,7 +183,8 @@ a:visited {
 }
 
 #foreground #canvas canvas {
-  background: repeating-linear-gradient(45deg, #f0f0f0 0px, #f0f0f0 10px, #d0d0d0 10px, #d0d0d0 20px);
+  background: repeating-conic-gradient(#eeeeee 0 25%, #cccccc 0 50%) 
+      50% / 20px 20px
 }
 
 #sidebar {
