@@ -10,11 +10,11 @@
 
 ## about
 creativejr - a browser based creative tool suite made with vanilla js and zero dependencies<br>
-includes photojr and mebmjr, easy to use and lightweight.<br>
+includes photojr and mebmjr, easy to use and lightweight<br>
 
 ## features
-- **simple to use**: every tool is designed to be as simple and easy to use
-- **easy to learn**: because of its simplicity, learning these tools are easy
+- **simple to use**: every app is designed to be as simple and easy to use
+- **easy to learn**: because of its simplicity, learning each app is easy
 - **browser-based**: edit photos and videos without leaving the browser
 - **all in one**: everything's in one place, no need to juggle websites
 
