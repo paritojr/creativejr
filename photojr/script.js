@@ -189,8 +189,11 @@ class ImageLayer extends CommonLayer {
   render(canvas_out) {
     canvas_out.save();
     canvas_out.globalCompositeOperation = this.blendMode;
+    const w = this.width * this.scale;
+    const h = this.height * this.scale;
+    canvas_out.translate(this.x + w / 2, this.y + h / 2);
     canvas_out.rotate((this.rotation * Math.PI) / 180);
-    canvas_out.drawImage(this.image, this.x, this.y, this.width * this.scale, this.height * this.scale);
+    canvas_out.drawImage(this.image, -w / 2, -h / 2, w, h);
     canvas_out.restore();
   }
 }
