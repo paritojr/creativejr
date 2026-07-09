@@ -590,7 +590,7 @@ class Project {
     let fnprompt = prompt("enter image name:");
     let filename;
     if (!fnprompt) {
-      filename = "image";
+      return;
     } else {
       filename = fnprompt;
     }
