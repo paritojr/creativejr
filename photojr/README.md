@@ -1,10 +1,10 @@
 <div align="center">
 <h1>photojr</h1>
-📷 a photo editing tool
+📷 a photo editing app
 </div>
 
 ## about
-photojr is a photo editing tool, in which you can do a lot of things, like:
+photojr is a photo editing app, in which you can do a lot of things, like:
 - import images and modify them
 - make shapes and stuff
 - create and use your own palettes
