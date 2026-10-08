@@ -1600,12 +1600,6 @@ function popup(text) {
 }
 
 window.addEventListener('load', function() {
-  // traffic public here: https://jott.live/stat?path=/raw/mebm_hit
-  var xhr = new XMLHttpRequest();
-  let url = "https://jott.live/raw/mebm_hit";
-  xhr.open("GET", url, true);
-  xhr.send(null);
-  
   // fix mobile touch
   document.getElementById('layer_holder').addEventListener("touchmove", function (e) {
     e.stopPropagation();
